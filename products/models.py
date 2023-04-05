@@ -6,6 +6,7 @@ from django.db import models
 class Category(models.Model):
     name = models.CharField(unique=True, verbose_name='Название', max_length=256)
     slug = models.SlugField(unique=True, verbose_name='Адрес')
+    image = models.ImageField(upload_to='products/',)
 
     class Meta:
         verbose_name = 'Категория'
@@ -22,6 +23,7 @@ class Subcategory(models.Model):
     category = models.ForeignKey(Category,
                                  related_name='subcategories',
                                  on_delete=models.PROTECT)
+    image = models.ImageField(upload_to='products/',)
 
     class Meta:
         verbose_name = 'Подкатегория'
@@ -33,13 +35,14 @@ class Subcategory(models.Model):
 
 
 class Product(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, unique=True)
     name = models.CharField(unique=True, verbose_name='Название', max_length=256)
     slug = models.SlugField(unique=True, verbose_name='Адрес')
     price = models.DecimalField(max_digits=6, decimal_places=2,
                                 verbose_name='Цена')
     subcategory = models.ForeignKey(Subcategory, related_name='products',
                                     on_delete=models.PROTECT)
+    image = models.ImageField(upload_to='products/',)
+
 
     class Meta:
         verbose_name = 'Продукт'
