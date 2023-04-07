@@ -1,8 +1,10 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+AUTH_USER_MODEL = 'users.CustomUser'
 
 SECRET_KEY = 'django-insecure-%!qw$+ma=z6o(a84216y-y7f0=%fp0gqm5vfhbr1wd0^e%y3&w'
 
@@ -18,12 +20,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'rest_framework.authtoken',
     'sorl.thumbnail',
     'sorl_thumbnail_serializer',
+    'djoser',
+    'drf_yasg',
+
     'products',
-    'api',
-    'rest_framework',
-    'django_cleanup.apps.CleanupConfig',
+    'users',
+    'api',    
 ]
 
 MIDDLEWARE = [
@@ -56,6 +63,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'store.wsgi.application'
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+
+DJOSER = {
+    'SEND_ACTIVATION_EMAIL': False,
+    'HIDE_USERS': True,
+#    'ACTIVATION_URL': '/api/auth/verify/{uid}/{token}/',
+#    'PASSWORD_RESET_CONFIRM_URL': '/password/reset/confirm/{uid}/{token}',
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'api.serializers.CustomUserCreateSerializer',
+        'current_user': 'api.serializers.CustomUserSerializer',
+    },
+
+}
+
+
+# DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+# EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+
+
+# SWAGGER_SETTINGS = {
+#    'DEFAULT_API_URL': 'http://127.0.0.1:8000/api/'
+# }
 
 DATABASES = {
     'default': {

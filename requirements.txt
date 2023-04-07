@@ -3,3 +3,5 @@ djangorestframework==3.14.0
 Pillow==9.5.0
 django-cleanup==7.0.0
 sorl-thumbnail-serializer-field==0.2.1
+djoser==2.1.0
+drf-yasg==1.21.5

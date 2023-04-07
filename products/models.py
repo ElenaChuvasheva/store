@@ -1,7 +1,10 @@
 from decimal import Decimal
 
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -29,7 +32,7 @@ class Subcategory(models.Model):
     class Meta:
         verbose_name = 'Подкатегория'
         verbose_name_plural = 'Подкатегории'
-        ordering = ('name',)
+        ordering = ('category',)
 
     def __str__(self):
         return self.name
@@ -41,16 +44,42 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=6, decimal_places=2,
                                 verbose_name='Цена',
                                 validators=(MinValueValidator(
-                                    limit_value=Decimal('0.01'), message='Цена не может быть меньше 1 коп'),))
+                                    limit_value=Decimal('0.01'),
+                                    message='Цена не может быть меньше 1 коп'),
+                                    ))
     subcategory = models.ForeignKey(Subcategory, related_name='products',
-                                    on_delete=models.PROTECT)
+                                    on_delete=models.PROTECT,
+                                    verbose_name='Подкатегория')
     image = models.ImageField(upload_to='products/',)
+    cart_of = models.ManyToManyField(User, related_name='cart',
+                                  blank=True, verbose_name='Корзина',
+                                  through='Cart')
 
 
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
-        ordering = ('subcategory',)
+        ordering = ('pk',)
 
     def __str__(self):
         return self.name
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,
+                             related_name='cart_of',
+                             verbose_name='Пользователь')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
+                                related_name='cart',
+                                verbose_name='Продукт')
+    amount = models.PositiveSmallIntegerField(verbose_name='Количество',
+        validators=[
+            MinValueValidator(limit_value=1,
+                              message='Количество не может быть меньше 1')],
+        default=1)
+    
+    class Meta:
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'product'), name='unique_user_product'),)
+        
