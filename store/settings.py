@@ -92,6 +92,17 @@ DJOSER = {
 #    'DEFAULT_API_URL': 'http://127.0.0.1:8000/api/'
 # }
 
+SWAGGER_SETTINGS = {
+   'SECURITY_DEFINITIONS': {
+      'Token': {
+            'type': 'http',
+            'description': 'Авторизация по токену. Все запросы от имени пользователя должны выполняться с заголовком "Authorization: Token TOKENVALUE"',
+            'scheme': 'Token'
+      }
+   }
+}
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

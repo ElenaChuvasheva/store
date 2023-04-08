@@ -76,7 +76,7 @@ class ProductNotImageListSerializer(serializers.ModelSerializer):
                   'image_medium', 'image_large')
 
 
-class CartSerializer(serializers.ModelSerializer):
+class CartObjectSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(source='product.pk',
 #                                            queryset=Cart.objects.all(),
                                             read_only=True)
