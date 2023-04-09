@@ -3,10 +3,11 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Prefetch, Sum
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
-from rest_framework import generics, status, viewsets
+from rest_framework import filters, generics, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -108,7 +109,7 @@ categories_view = swagger_auto_schema(
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
-    operation_description='Получение списка продуктов',
+    operation_description='Получение списка продуктов. Доступна фильтрация по id категории и подкатегории, поиск по названию.',
     operation_id='Список продуктов', tags=['Продукты'], security=[]
 ))
 @method_decorator(name='retrieve', decorator=swagger_auto_schema(
@@ -119,10 +120,10 @@ categories_view = swagger_auto_schema(
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all().select_related()
     serializer_class = ProductSerializer
-    # на случай, если выдача рисунков списком некритична:
-    # serializer_class = ProductNotImageListSerializer
     pagination_class = ProductPagination
-
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('subcategory', 'subcategory__category')
+    search_fields = ('name',)
 
     @swagger_auto_schema(method='POST',
                          request_body=no_body,

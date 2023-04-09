@@ -14,6 +14,11 @@ from products.models import CartObject, Category, Product, Subcategory
 
 User = get_user_model()
 
+CustomDecimalField = partial(serializers.DecimalField, max_digits=6,
+                                     decimal_places=2,
+                                     coerce_to_string=False)
+
+
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
@@ -45,9 +50,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         source='subcategory.category.name', read_only=True)
     images = CustomImageSerializer(source='image')
-    price = serializers.DecimalField(max_digits=6,
-                                     decimal_places=2,
-                                     coerce_to_string=False)
+    price = CustomDecimalField()
 
     class Meta:
         model = Product
@@ -70,9 +73,7 @@ class ProductNotImageListSerializer(serializers.ModelSerializer):
         read_only=True, slug_field='name')
     category = serializers.PrimaryKeyRelatedField(
         source='subcategory.category.name', read_only=True)
-    price = serializers.DecimalField(max_digits=6,
-                                     decimal_places=2,
-                                     coerce_to_string=False)   
+    price = CustomDecimalField()
     image_large = ProductImageSerializer('512x512')
     image_medium = ProductImageSerializer('256x256')
     image_small = ProductImageSerializer('128x128')
@@ -95,16 +96,10 @@ class CartObjectSerializer(serializers.ModelSerializer):
                                             read_only=True)
     name = serializers.CharField(source='product.name', read_only=True)
     amount = serializers.IntegerField()
-    price = serializers.DecimalField(source='product.price', max_digits=6,
-                                     decimal_places=2,
-                                     coerce_to_string=False,
-                                     read_only=True)
+    price = CustomDecimalField(source='product.price', read_only=True)
 
 #    total_price = serializers.SerializerMethodField()
-    total_price = serializers.DecimalField(max_digits=6,
-                                     decimal_places=2,
-                                     coerce_to_string=False,
-                                     read_only=True)
+    total_price = CustomDecimalField(read_only=True)
 
     class Meta:
         model= CartObject
@@ -118,34 +113,23 @@ class CartObjectSerializer(serializers.ModelSerializer):
 #    def get_total_price(self, obj):
 #        return obj.amount*obj.product.price
 
-class CartListSerializer(serializers.ListSerializer):
-    child = CartObjectSerializer()
-#    wtf = serializers.SerializerMethodField()
 
-    class Meta:
-        fields = ('child')
-
-#    def get_wtf(self, obj):
-#        return 1
-
-class CartSerializer(serializers.Serializer):
-# class CartSerializer(serializers.ModelSerializer):
-    # products = CartListSerializer(source='cart_of')
-    cart_of = CartObjectSerializer(many=True)
+# class CartSerializer(serializers.Serializer):
+class CartSerializer(serializers.ModelSerializer):
+    products = CartObjectSerializer(source='cart_of', many=True)
+#    cart_of = CartObjectSerializer(many=True)
     # products = CartObjectSerializer(many=True)
     total = serializers.SerializerMethodField()
 
     class Meta:
-#        model = User
-        fields = ('cart_of', 'wtf')
+        model = User
+        fields = ('products', 'total')
 
-    @swagger_serializer_method(serializer_or_field=serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False))
+    @swagger_serializer_method(serializer_or_field=CustomDecimalField())
     def get_total(self, obj):
         sum = Decimal('0')
         for cart_object in obj.cart_of.all():
             sum += cart_object.total_price
-        print(sum)
-        print(type(sum))
         return sum
 
 
