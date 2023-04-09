@@ -51,9 +51,6 @@ class Product(models.Model):
                                     on_delete=models.PROTECT,
                                     verbose_name='Подкатегория')
     image = models.ImageField(upload_to='products/',)
-    cart_of = models.ManyToManyField(User, related_name='cart',
-                                  blank=True, verbose_name='Корзина',
-                                  through='Cart')
 
 
     class Meta:
@@ -65,7 +62,7 @@ class Product(models.Model):
         return self.name
 
 
-class Cart(models.Model):
+class CartObject(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,
                              related_name='cart_of',
                              verbose_name='Пользователь')
@@ -82,4 +79,3 @@ class Cart(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'product'), name='unique_user_product'),)
-        

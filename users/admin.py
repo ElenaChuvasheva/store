@@ -2,12 +2,12 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
-from products.models import Cart
+from products.models import CartObject
 
 User = get_user_model()
 
-class CartInline(admin.TabularInline):
-    model = Cart
+class CartObjectInline(admin.TabularInline):
+    model = CartObject
     raw_id_fields = ('product',)
     list_select_related = ('product',)
     verbose_name = 'Продукт в корзине'
@@ -23,7 +23,7 @@ class UserAdmin(UserAdmin):
             'is_active', 'is_staff', 'is_superuser')}),
     )
     list_filter = ('username', 'email')
-    inlines = (CartInline,)
+    inlines = (CartObjectInline,)
 
     def get_list_display(self, request):
         return ['pk', 'username', 'email', 'first_name',

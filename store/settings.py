@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'sorl_thumbnail_serializer',
     'djoser',
     'drf_yasg',
+    'django_extensions',
 
     'products',
     'users',

@@ -2,9 +2,8 @@ from django.urls import include, path
 from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from rest_framework import routers
 
-from api.views import (CategoryListView, ProductViewSet, cart_view,
-                       categories_view, token_login, token_logout,
-                       users_create, users_me)
+from api.views import (CategoryListView, ProductViewSet, categories_view,
+                       token_login, token_logout, users_create, users_me)
 
 app_name = 'api'
 
@@ -39,7 +38,6 @@ products_router.register('products', ProductViewSet, basename='products')
 urlpatterns = [
     path('categories/', categories_view),    
     path('users/', include(users_urls)),
-    path('my_cart/', cart_view),
     path('auth/token/', include(authtoken_urls)),
     path('', include(products_router.urls)),
 #    path('auth/verify/<str:uid>/<str:token>/', UserActivationView.as_view()),
