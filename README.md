@@ -1,4 +1,5 @@
 # Бэкенд магазина
+Решение задачи по алгоритмам находится [здесь](https://github.com/ElenaChuvasheva/test).
 ## Технологии
 Python 3.10, Django Rest Framework, Djoser, Docker, PostgreSQL, drf-yasg
 
