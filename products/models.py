@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+from smart_selects.db_fields import ChainedForeignKey
 
 User = get_user_model()
 
@@ -49,7 +50,14 @@ class Product(models.Model):
                                     limit_value=Decimal('0.01'),
                                     message='Цена не может быть меньше 1 коп'),
                                     ))
-    subcategory = models.ForeignKey(Subcategory, related_name='products',
+    category = models.ForeignKey(Category, related_name='products', on_delete=models.PROTECT, verbose_name='Категория')
+    subcategory = ChainedForeignKey(Subcategory,
+                                    chained_field='category',
+                                    chained_model_field='category',
+                                    show_all=False,
+                                    auto_choose=True,
+                                    sort=True,
+                                    related_name='products',
                                     on_delete=models.PROTECT,
                                     verbose_name='Подкатегория')
     image = models.ImageField(upload_to='products/',)

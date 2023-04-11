@@ -12,7 +12,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 SECRET_KEY = os.getenv('SECRET_KEY', default='very_secret_key')
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'web']
 # ALLOWED_HOSTS = ['*']
@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'djoser',
     'drf_yasg',
     'django_filters',
+    'smart_selects',
 
 #    'django_extensions',
 
@@ -40,6 +41,8 @@ INSTALLED_APPS = [
     'users',
     'api',    
 ]
+
+USE_DJANGO_JQUERY = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -10,6 +10,7 @@ from rest_framework import permissions
 
 urlpatterns = [
     path('for_staff_only/', admin.site.urls),
+    re_path(r'^chaining/', include('smart_selects.urls')),
     path('api/', include('api.urls'))
 ]
 

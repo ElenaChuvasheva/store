@@ -47,8 +47,8 @@ class CustomImageSerializer(ImageListField):
 class ProductSerializer(serializers.ModelSerializer):
     subcategory = serializers.SlugRelatedField(
         read_only=True, slug_field='name')
-    category = serializers.PrimaryKeyRelatedField(
-        source='subcategory.category.name', read_only=True)
+    category = serializers.SlugRelatedField(
+        read_only=True, slug_field='name')
     images = CustomImageSerializer(source='image')
     price = CustomDecimalField()
 
