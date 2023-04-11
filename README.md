@@ -38,6 +38,7 @@ docker-compose exec web python manage.py migrate
 ```
 docker-compose exec web python manage.py loaddata fixtures.json
 ```
+Бэкенд запустится по адресу localhost.
 
 ## Примеры запросов
 redoc/ - автоматически сгенерированная документация API  
