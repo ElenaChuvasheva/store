@@ -90,6 +90,7 @@ class ProductSmallSerializer(serializers.ModelSerializer):
         model = Product
         fields = ('id', 'name')
 
+
 class CartObjectSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(source='product.pk',
 #                                            queryset=Cart.objects.all(),
@@ -113,6 +114,12 @@ class CartObjectSerializer(serializers.ModelSerializer):
 #    def get_total_price(self, obj):
 #        return obj.amount*obj.product.price
 
+class CartListSerializer(serializers.ListSerializer):
+    child = CartObjectSerializer()
+#    wtf = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = ('child',)
 
 # class CartSerializer(serializers.Serializer):
 class CartSerializer(serializers.ModelSerializer):
@@ -127,10 +134,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=CustomDecimalField())
     def get_total(self, obj):
-        sum = Decimal('0')
-        for cart_object in obj.cart_of.all():
-            sum += cart_object.total_price
-        return sum
+        return sum(object.total_price for object in obj.cart_of.all())
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):

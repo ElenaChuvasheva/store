@@ -2,16 +2,21 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-SECRET_KEY = 'django-insecure-%!qw$+ma=z6o(a84216y-y7f0=%fp0gqm5vfhbr1wd0^e%y3&w'
+SECRET_KEY = os.getenv('SECRET_KEY', default='very_secret_key')
 
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'web']
+# ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['http://*.127.0.0.1', 'http://localhost']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -29,7 +34,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
 
-    'django_extensions',
+#    'django_extensions',
 
     'products',
     'users',
@@ -105,14 +110,24 @@ SWAGGER_SETTINGS = {
    }
 }
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+            'NAME': os.getenv('DB_NAME', default='postgres'),
+            'USER': os.getenv('POSTGRES_USER', default='postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='abcd1234'),
+            'HOST': os.getenv('DB_HOST', default='db'),
+            'PORT': os.getenv('DB_PORT', default='5432')
+        }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -130,7 +145,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'UTC'
 
@@ -143,5 +158,6 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

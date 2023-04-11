@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -26,7 +27,8 @@ class Subcategory(models.Model):
     slug = models.SlugField(unique=True, verbose_name='Адрес')
     category = models.ForeignKey(Category,
                                  related_name='subcategories',
-                                 on_delete=models.PROTECT)
+                                 on_delete=models.PROTECT,
+                                 verbose_name='Категория')
     image = models.ImageField(upload_to='products/',)
 
     class Meta:
@@ -56,7 +58,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
-        ordering = ('pk',)
+        ordering = ('subcategory__category', 'subcategory')
 
     def __str__(self):
         return self.name
@@ -79,3 +81,4 @@ class CartObject(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'product'), name='unique_user_product'),)
+        ordering = ('-pk',)

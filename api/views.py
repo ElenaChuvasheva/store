@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import requests
 from django.contrib.auth import get_user_model
 from django.db.models import Count, F, Prefetch, Sum
@@ -7,16 +9,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import TokenCreateView, TokenDestroyView, UserViewSet
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
-from rest_framework import filters, generics, status, viewsets
-from rest_framework.decorators import action, api_view
+from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.errors import err_404_not_found, err_already_in_cart, err_not_in_cart
+from api import swagger_responses
+from api.errors import (err_already_in_cart, err_dict_401_unauthorized,
+                        err_dict_404_not_found, err_not_in_cart)
 from api.pagination import CategoryPagination, ProductPagination
-from api.serializers import (CartObjectSerializer, CartSerializer,
-                             CategorySerializer, CustomUserCreateSerializer,
-                             CustomUserSerializer,
+from api.serializers import (CartListSerializer, CartObjectSerializer,
+                             CartSerializer, CategorySerializer,
+                             CustomUserCreateSerializer, CustomUserSerializer,
                              ProductNotImageListSerializer, ProductSerializer)
 from products.models import CartObject, Category, Product
 
@@ -25,24 +29,17 @@ User = get_user_model()
 token_login = swagger_auto_schema(
       method='POST', tags=['Авторизация'], operation_id='Получение токена',
       operation_description='Получение токена авторизации для входа в систему',
-      security=[])(TokenCreateView.as_view())
+      security=[],
+      responses=swagger_responses.token_login_responses)(TokenCreateView.as_view())
 token_logout = swagger_auto_schema(
       method='POST', tags=['Авторизация'], operation_id='Удаление токена',
-      operation_description='Удаление токена авторизации при выходе из системы')(
+      operation_description='Удаление токена авторизации при выходе из системы',
+      responses=swagger_responses.token_logout_responses)(
         TokenDestroyView.as_view())
-
-user_get_me_responses = {status.HTTP_200_OK: openapi.Response('Успешное получение информации из профиля',
-                                                           CustomUserSerializer)}
-user_post_responses = {status.HTTP_201_CREATED: openapi.Response('Пользователь создан',
-                                                                 CustomUserSerializer),
-                        status.HTTP_400_BAD_REQUEST: openapi.Response(
-        'Ошибки валидации', examples={'application/json': {'email': [
-        'This field is required.'
-    ]}})}
 
 @swagger_auto_schema(method='GET', tags=['Пользователи'], operation_id='Профиль пользователя',
                      operation_description='Профиль пользователя',
-                     responses=user_get_me_responses)
+                     responses=swagger_responses.user_get_me_responses)
 @api_view(['GET'])
 def users_me(request):
     return UserViewSet.as_view({'get': 'me'})(request._request)
@@ -50,52 +47,17 @@ def users_me(request):
 
 @swagger_auto_schema(method='POST', tags=['Пользователи'], operation_id='Регистрация пользователя',
                      operation_description='Регистрация пользователя',
-                     responses=user_post_responses,
+                     responses=swagger_responses.user_post_responses,
                      request_body=CustomUserCreateSerializer,
                      security=[])
 @api_view(['POST'])
 def users_create(request):
     return UserViewSet.as_view({'post': 'create'})(request._request)
 
-post_shopping_cart_responses = {
-    status.HTTP_201_CREATED: openapi.Response(
-        'Успешное добавление в корзину'),
-    err_already_in_cart.status: openapi.Response(
-        'Продукт уже есть в корзине', examples={'application/json': err_already_in_cart.get_errors_context()}),
-    err_404_not_found.status: openapi.Response(
-        'Объект не найден', examples={'application/json': err_404_not_found.get_errors_context()})
-}
-
-patch_shopping_cart_responses = {
-    status.HTTP_200_OK: openapi.Response(
-        'Успешное изменение количества'),
-    err_not_in_cart.status: openapi.Response(
-        'Продукта нет в корзине', examples={'application/json': err_not_in_cart.get_errors_context()}),
-    err_404_not_found.status: openapi.Response(
-        'Объект не найден', examples={'application/json': err_404_not_found.get_errors_context()})
-}
-
-delete_shopping_cart_responses = {
-    status.HTTP_204_NO_CONTENT: openapi.Response('Успешное удаление из корзины'),
-    err_not_in_cart.status: openapi.Response(
-        'Продукта нет в корзине', examples={'application/json': err_not_in_cart.get_errors_context()}),
-    err_404_not_found.status: openapi.Response(
-        'Объект не найден', examples={'application/json': err_404_not_found.get_errors_context()})
-}
-
-get_all_cart_responses = {
-    status.HTTP_200_OK: openapi.Response('Получен список продуктов в корзине', CartSerializer)
-}
-
-delete_all_cart_responses = {status.HTTP_204_NO_CONTENT: openapi.Response('Успешная очистка корзины')}
-
-get_product_responses = {
+get_product_responses = { **{
     status.HTTP_200_OK: openapi.Response(
         'Успешное получение данных о продукте', ProductSerializer),
-    err_404_not_found.status: openapi.Response(
-        'Объект не найден', examples={'application/json': err_404_not_found.get_errors_context()})
-
-}
+}, **err_dict_404_not_found}
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -106,6 +68,7 @@ categories_view = swagger_auto_schema(
       method='GET', tags=['Категории'], operation_id='Список категорий',
       security=[])(
           CategoryListView.as_view())
+
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -127,20 +90,20 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
     @swagger_auto_schema(method='POST',
                          request_body=no_body,
-                         responses=post_shopping_cart_responses,
+                         responses=swagger_responses.post_shopping_cart_responses,
                          tags=['Корзина'],
                          operation_id='Добавление продукта в корзину')
     @swagger_auto_schema(method='PATCH',
                          request_body=CartObjectSerializer,
-                         responses=patch_shopping_cart_responses,
+                         responses=swagger_responses.patch_shopping_cart_responses,
                          tags=['Корзина'],
                          operation_id='Изменение количества продукта в корзине')
     @swagger_auto_schema(method='DELETE',
-                         responses=delete_shopping_cart_responses,
+                         responses=swagger_responses.delete_shopping_cart_responses,
                          tags=['Корзина'],
                          operation_id='Удаление продукта из корзины')
     @action(detail=True, methods=('POST', 'PATCH', 'DELETE',),
-            url_path='shopping_cart')
+            url_path='shopping_cart', permission_classes=[permissions.IsAuthenticated])
     def shopping_cart_detail(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         current_user = request.user
@@ -169,43 +132,44 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @swagger_auto_schema(method='GET',
-                         responses=get_all_cart_responses,
+
+@swagger_auto_schema(method='GET',
+                         responses=swagger_responses.get_all_cart_responses,
                          tags=['Корзина'],
                          operation_id='Получение списка продуктов в корзине')
-    @swagger_auto_schema(method='DELETE',
-                        responses=delete_all_cart_responses,
+@swagger_auto_schema(method='DELETE',
+                        responses=swagger_responses.delete_all_cart_responses,
                         tags=['Корзина'],
                         operation_id='Очистка корзины')
-    @action(detail=False, methods=('GET', 'DELETE',),
-            url_path='shopping_cart')
-    def shopping_cart(self, request):
-        current_user = self.request.user
-        match request.method:            
-            case 'GET':
-#                cart_objects = current_user.cart_of.select_related('product').all().annotate(some_shit=F('amount')*F('product__price'))
-#                print(current_user.cart_of)
-#                serializer = CartObjectSerializer(cart_objects, many=True)
+@api_view(['GET', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def shopping_cart_view(request):
+    current_user = request.user
+    match request.method:            
+        case 'GET':
+#            print(type(User.cart_of))
+#            cart_objects = current_user.cart_of.all().select_related('product').annotate(total_price=F('amount')*F('product__price'))
+#            serializer = CartListSerializer(cart_objects)
+#            print(cart_objects)
+#            serializer = CartObjectSerializer(cart_objects, many=True)
+#            number = cart_objects.aggregate(total=Sum('total_price'))
 #                serializer = CartSerializer(data={'cart_of': list(cart_objects.values())})
 #                serializer.is_valid(raise_exception=True)
-                user_obj = User.objects.prefetch_related(
-                    Prefetch(
-                    'cart_of',
-                    queryset = CartObject.objects.select_related('product').annotate(
-                        total_price=F('amount')*F('product__price'))
-                    )
-                ).get(pk=current_user.id)
-
-                serializer = CartSerializer(user_obj)
-#                serializer = CartSerializer(user_obj[0])
-#                serializer = CartSerializer(data={'cart_of': list(cart_objects.values())})
-#                serializer.is_valid()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-                # return Response(status=status.HTTP_200_OK)
-            case 'DELETE':
-                current_user.cart_of.all().delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+            user_obj = User.objects.prefetch_related(
+                Prefetch(
+                'cart_of',
+                queryset = CartObject.objects.select_related('product').annotate(
+                    total_price=F('amount')*F('product__price'))
+                )
+            ).get(pk=current_user.id)
+            serializer = CartSerializer(user_obj)
+#            data = {'products': serializer.data, 'total': get_total_price(cart_objects)}
+#            return Response(data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        case 'DELETE':
+            current_user.cart_of.all().delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserActivationView(APIView):
