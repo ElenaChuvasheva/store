@@ -6,6 +6,7 @@ from products.models import CartObject
 
 User = get_user_model()
 
+
 class CartObjectInline(admin.TabularInline):
     model = CartObject
     raw_id_fields = ('product',)
@@ -13,8 +14,11 @@ class CartObjectInline(admin.TabularInline):
     verbose_name = 'Продукт в корзине'
     verbose_name_plural = 'Корзина'
 
+
 @admin.register(User)
 class UserAdmin(UserAdmin):
+    list_display = ('pk', 'username', 'email', 'first_name',
+                    'last_name', 'is_active', 'is_staff',)
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Персональная информация', {'fields': (
@@ -24,7 +28,3 @@ class UserAdmin(UserAdmin):
     )
     list_filter = ('username', 'email')
     inlines = (CartObjectInline,)
-
-    def get_list_display(self, request):
-        return ['pk', 'username', 'email', 'first_name',
-                  'last_name', 'is_active', 'is_staff']

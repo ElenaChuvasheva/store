@@ -1,5 +1,4 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -8,14 +7,13 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-AUTH_USER_MODEL = 'users.CustomUser'
-
 SECRET_KEY = os.getenv('SECRET_KEY', default='very_secret_key')
 
-DEBUG = True
+DEBUG = False
+
+AUTH_USER_MODEL = 'users.CustomUser'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'web']
-# ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['http://*.127.0.0.1', 'http://localhost']
 
 INSTALLED_APPS = [
@@ -29,17 +27,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'sorl.thumbnail',
-    'sorl_thumbnail_serializer',
     'djoser',
     'drf_yasg',
     'django_filters',
     'smart_selects',
 
-#    'django_extensions',
-
     'products',
     'users',
-    'api',    
+    'api',
 ]
 
 USE_DJANGO_JQUERY = True
@@ -83,34 +78,22 @@ REST_FRAMEWORK = {
 DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'HIDE_USERS': True,
-#    'ACTIVATION_URL': '/api/auth/verify/{uid}/{token}/',
-#    'PASSWORD_RESET_CONFIRM_URL': '/password/reset/confirm/{uid}/{token}',
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
         'current_user': 'api.serializers.CustomUserSerializer',
     },
-
 }
 
 
-# DEFAULT_FROM_EMAIL = 'webmaster@localhost'
-# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-# EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
-
-
-# SWAGGER_SETTINGS = {
-#    'DEFAULT_API_URL': 'http://127.0.0.1:8000/api/'
-# }
-
 SWAGGER_SETTINGS = {
-   'SECURITY_DEFINITIONS': {
-      'Token': {
+    'SECURITY_DEFINITIONS': {
+        'Token': {
             'type': 'http',
             'description': 'Авторизация по токену. Все запросы от имени пользователя должны выполняться с заголовком "Authorization: Token TOKENVALUE"',
             'scheme': 'Token'
-      }
-   }
+        }
+    }
 }
 
 if DEBUG:
@@ -130,7 +113,7 @@ else:
             'HOST': os.getenv('DB_HOST', default='db'),
             'PORT': os.getenv('DB_PORT', default='5432')
         }
-}
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
